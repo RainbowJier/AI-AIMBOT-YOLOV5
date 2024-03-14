@@ -62,37 +62,26 @@ Follow these steps **after** Python and all packages have been installed:
 
 Follow these sparkly steps to get your TensorRT ready for action! 🛠️✨
 
-1. **Introduction** 🎬
-   Watch the TensorRT section of the setup [video 🎥](https://www.youtube.com/watch?v=uniL5yR7y0M&ab_channel=RootKit)
-   before you begin. It's loaded with useful tips!
-
-2. **Oops! Don't Forget the Environment** 🌱
-   We forgot to mention adding environmental variable paths in the video. Make sure to do this part!
-
-3. **Get Support If You're Stumped** 🤔
-   If you ever feel lost, you can always `@Wonder` your questions in our [Discord 💬](https://discord.gg/rootkitorg).
-   Wonder is here to help!
-
-4. **Install Cupy**
+1. **Install Cupy**
    Run the following `pip install cupy-cuda11x`
 
-5. **CUDNN Installation** 🧩
+2. **CUDNN Installation** 🧩
    Click to
    install [CUDNN 📥](https://developer.nvidia.com/downloads/compute/cudnn/secure/8.9.6/local_installers/11.x/cudnn-windows-x86_64-8.9.6.50_cuda11-archive.zip/).
    You'll need a Nvidia account to proceed. Don't worry it's free.
 
-6. **Unzip and Relocate** 📁➡️
+3. **Unzip and Relocate** 📁➡️
    Open the .zip CuDNN file and move all the folders/files to where the CUDA Toolkit is on your machine, usually
    at `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8`.
 
-7. **Get TensorRT 8.6 GA** 🔽
+4. **Get TensorRT 8.6 GA** 🔽
    Fetch [`TensorRT 8.6 GA 🛒`](https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/secure/8.6.1/zip/TensorRT-8.6.1.6.Windows10.x86_64.cuda-11.8.zip).
 
-8. **Unzip and Relocate** 📁➡️
+5. **Unzip and Relocate** 📁➡️
    Open the .zip TensorRT file and move all the folders/files to where the CUDA Toolkit is on your machine, usually
    at `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8`.
 
-9. **Python TensorRT Installation** 🎡
+6. **Python TensorRT Installation** 🎡
    Once you have all the files copied over, you should have a folder
    at `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\python`. If you do, good, then run the following command
    to install TensorRT in python.
@@ -102,26 +91,25 @@ Follow these sparkly steps to get your TensorRT ready for action! 🛠️✨
    🚨 If the following steps didn't work, don't stress out! 😅 The labeling of the files corresponds with the Python
    version you have installed on your machine. We're not looking for the 'lean' or 'dispatch' versions. 🔍 Just locate
    the correct file and replace the path with your new one. 🔄 You've got this! 💪
+7. **Set Your Environmental Variables** 🌎
+   Add these paths to your environment:
+   ```
+   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\lib
+   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin
+   ```
 
-10. **Set Your Environmental Variables** 🌎
-    Add these paths to your environment:
 
-- `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\lib`
-- `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\libnvvp`
-- `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin`
-
-11. **Download Pre-trained Models** 🤖
-    You can use one of the .engine models we supply. But if it doesn't work, then you will need to re-export it. Grab
-    the `.pt` file here for the model you want. We recommend `yolov5s.py`
-    or `yolov5m.py` [HERE 🔗](https://github.com/ultralytics/yolov5/releases/tag/v7.0).
+8. **Download Pre-trained Models** 🤖
+   You can use one of the .engine models we supply. But if it doesn't work, then you will need to re-export it. Grab
+   the `.pt` file here for the model you want. We recommend `yolov5s.py`
+   or `yolov5m.py` [HERE 🔗](https://github.com/ultralytics/yolov5/releases/tag/v7.0).
 
 12. **Run the Export Script** 🏃‍♂️💻
     Time to execute `export.py` with the following command. Patience is key; it might look frozen, but it's just
     concentrating hard! Can take up to 20 mintues.
-
-```
-python .\export.py --weights ./yolov5s.pt --include engine --half --imgsz 320 320 --device 0
-```
+   ```bash
+   python .\export.py --weights ./yolov5s.pt --include engine --half --imgsz 320 320 --device 0
+   ```
 
 Note: You can pick a different YOLOv5 model size. TensorRT's power allows for larger models if desired!
 
