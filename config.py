@@ -22,7 +22,7 @@ confidence = 0.8
 aaQuitKey = "P"
 
 # If you want to main slightly upwards towards the head
-headshot_mode = False
+headshot_mode = True
 
 # Displays the Corrections per second in the terminal
 cpsDisplay = True

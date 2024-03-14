@@ -9,9 +9,6 @@ import torch
 import win32api
 
 import gameSelection
-# Could be do with
-# from config import *
-# But we are writing it out for clarity for new devs
 from config import aaMovementAmp, useMask, maskHeight, maskWidth, aaQuitKey, confidence, headshot_mode, cpsDisplay, \
     visuals, centerOfScreen, maskSide
 from models.common import DetectMultiBackend
@@ -138,7 +135,7 @@ def detection(npImg, model, names):
     results = model(im)
 
     pred = non_max_suppression(
-        results, confidence, confidence, [0, 1, 2, 3], False, max_det=3)
+        results, confidence, confidence, [0, 1, 2, 3], False, max_det=2)
 
     targets = []
     for i, det in enumerate(pred):
@@ -190,9 +187,9 @@ def move_Mouse(targets, center_screen, last_mid_coord, cWidth, cHeight):
 
         box_height = targets.iloc[0].height
         if headshot_mode:
-            headshot_offset = box_height * 0.6
+            headshot_offset = box_height * 0.4
         else:
-            headshot_offset = box_height
+            headshot_offset = box_height * 0.2
 
         mouseMove = [xMid - cWidth, (yMid - headshot_offset) - cHeight]
 

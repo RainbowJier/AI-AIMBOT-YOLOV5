@@ -2,10 +2,20 @@
 
 ## TODO
 
-&#x2705;
-
-- [x] Automatic gun press
-- [x] Create a UI to use the program quickly in which you can define some configurations that you want to.
+- &#x2705; Skip platform detection.
+- &#x2705; Label picture.
+- &#x2705; Convert the model to onnx.
+- &#x2705; Train CS2 model.
+- &#x2705; Convert onnx to float16 and size 320.
+- &#x2705; predict successfully.
+- &#x2705; Training model with big datasets on Linux.
+- &#x2705; Problems with the display of recognized images
+- &#x2705; convert onnx to trt
+- &#x2705; Optimize mouse vibration issue
+- &#x2705; Automatic gun press
+- ✘ Problem : 完美平台检测程序的函数和鼠标
+    - ✘ 检测原理：反作弊用的是木马的手段，要想通过他们的检测，把自己的程序也写成木马
+    - ✘ 将程序改为木马，劫持，注入，签名三者其一都可以的
 
 *** 
 
