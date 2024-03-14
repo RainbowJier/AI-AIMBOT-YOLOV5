@@ -1,5 +1,14 @@
 ﻿# 🎯 AI Aimbot 🎮
 
+## TODO
+
+✅
+
+- [ ] Automatic gun press
+- [ ] Create a UI to use the program quickly in which you can define some configurations that you want to.
+
+*** 
+
 ## There are 3 Versions 🚀🚦🖥️
 
 - Fast 🏃‍♂️ - `main.py` ✅ Easy to set up, Works on any computer 💻
