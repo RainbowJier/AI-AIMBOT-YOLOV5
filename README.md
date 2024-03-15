@@ -12,7 +12,8 @@
 - &#x2705; Problems with the display of recognized images
 - &#x2705; convert onnx to trt
 - &#x2705; Optimize mouse vibration issue
-- &#x2705; Automatic gun press
+- &#x2705; Reduce auto-aiming range.
+- ✘ Automatic gun press
 - ✘ Problem : 完美平台检测程序的函数和鼠标
     - ✘ 检测原理：反作弊用的是木马的手段，要想通过他们的检测，把自己的程序也写成木马
     - ✘ 将程序改为木马，劫持，注入，签名三者其一都可以的
@@ -168,6 +169,43 @@ doses: `0.5` - `2`. ⚖️🕹️
 `onnxChoice` - Gear up for the right graphics card—Nvidia, AMD, or CPU power! 💻👾
 
 `centerOfScreen` - Keep this switched on to stay in the game's heart. ❤️🖥️
+
+## 💫Modifiy the range of self-aiming.
+
+```python
+def move_Mouse(targets, center_screen, cWidth, cHeight):
+    """
+    获取目标数据（坐标，高度）
+    Returns:
+
+    """
+    # If there are people in the center bounding box
+    if len(targets) > 0:
+        if (centerOfScreen):
+            """
+            Compute the distance from the center
+            （current_mid_x,current_mid_y)：检测到方框的中心点
+            targets["dist_from_center"]: The distant from the mouse point to the center of the box.
+            """
+            targets["dist_from_center"] = np.sqrt((targets.current_mid_x - center_screen[0]) ** 2 + (
+                    targets.current_mid_y - center_screen[1]) ** 2)
+
+            # Sort the data frame by distance from center
+            targets = targets.sort_values("dist_from_center")
+
+        ....other
+        codes....
+
+        # Based on the distance from the mouse point to the center of the target box
+        if (targets["dist_from_center"][0] < 50):
+            # 修改开启自瞄开关
+            if win32api.GetKeyState(0x14):
+                # 定义起始值、结束值和步长
+                # 构建递减序列的列表
+                for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
+                    # 分多次移动可一定程度解决超调问题
+                    Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
+```
 
 ## 📊 Current Stats
 

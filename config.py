@@ -3,9 +3,6 @@
 screenShotHeight = 320
 screenShotWidth = 320
 
-# 自瞄范围
-autoaimRange = 320
-
 # Use "left" or "right" for the mask side depending on where the interfering object is, useful for 3rd player models or large guns
 useMask = False
 maskSide = "left"
@@ -28,7 +25,7 @@ headshot_mode = True
 cpsDisplay = True
 
 # Set to True if you want to get the visuals
-visuals = False
+visuals = True
 
 # Smarter selection of people
 centerOfScreen = True

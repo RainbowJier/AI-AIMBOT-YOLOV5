@@ -75,12 +75,32 @@ def main():
             """
             移动鼠标
             """
-            move_Mouse(targets, center_screen, last_mid_coord, cWidth, cHeight)
+            move_Mouse(targets, center_screen, cWidth, cHeight)
 
             """
-            绘制方框
+            Draw frame.
             """
-            drawframe(npImg, targets)
+            # See what the bot sees
+            if visuals:
+                npImg = cp.asnumpy(npImg[0])
+                # Loops over every item identified and draws a bounding box
+                for i in range(0, len(targets)):
+                    halfW = round(targets["width"][i] / 2)
+                    halfH = round(targets["height"][i] / 2)
+                    midX = targets['current_mid_x'][i]
+                    midY = targets['current_mid_y'][i]
+                    (startX, startY, endX, endY) = int(
+                        midX + halfW), int(midY + halfH), int(midX - halfW), int(midY - halfH)
+
+                    # draw the bounding box and label on the frame
+                    label = "{}: {:.2f}%".format(
+                        "Human", targets["confidence"][i] * 100)
+                    cv2.rectangle(npImg, (startX, startY), (endX, endY),
+                                  (0, 255, 0), 2)
+
+                    y = startY - 15 if startY - 15 > 15 else startY + 15
+                    cv2.putText(npImg, label, (startX, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             """
             Forced garbage cleanup every second
@@ -147,8 +167,8 @@ def detection(npImg, model, names):
                 s += f"{n} {names[int(c)]}, "  # add to string
 
             for *xyxy, conf, cls in reversed(det):
-                targets.append((xyxy2xywh(torch.tensor(xyxy).view(
-                    1, 4)) / gn).view(-1).tolist() + [float(conf)])  # normalized xywh
+                targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                               [float(conf)])  # normalized xywh
 
     targets = pd.DataFrame(
         targets, columns=['current_mid_x', 'current_mid_y', 'width', "height", "confidence"])
@@ -156,7 +176,7 @@ def detection(npImg, model, names):
     return targets
 
 
-def move_Mouse(targets, center_screen, last_mid_coord, cWidth, cHeight):
+def move_Mouse(targets, center_screen, cWidth, cHeight):
     """
     获取目标数据（坐标，高度）
     Returns:
@@ -166,22 +186,19 @@ def move_Mouse(targets, center_screen, last_mid_coord, cWidth, cHeight):
     if len(targets) > 0:
         if (centerOfScreen):
             # Compute the distance from the center
+            """
+            （current_mid_x,current_mid_y)：检测到方框的中心点
+            """
             targets["dist_from_center"] = np.sqrt((targets.current_mid_x - center_screen[0]) ** 2 + (
                     targets.current_mid_y - center_screen[1]) ** 2)
 
             # Sort the data frame by distance from center
             targets = targets.sort_values("dist_from_center")
 
-        # Get the last persons mid coordinate if it exists
-        if last_mid_coord:
-            targets['last_mid_x'] = last_mid_coord[0]
-            targets['last_mid_y'] = last_mid_coord[1]
-            # Take distance between current person mid coordinate and last person mid coordinate
-            targets['dist'] = np.linalg.norm(
-                targets.iloc[:, [0, 1]].values - targets.iloc[:, [4, 5]], axis=1)
-            targets.sort_values(by="dist", ascending=False)
-
         # Take the first person that shows up in the dataframe (Recall that we sort based on Euclidean distance)
+        """
+        添加判断，锁头还是锁身体
+        """
         xMid = targets.iloc[0].current_mid_x
         yMid = targets.iloc[0].current_mid_y
 
@@ -193,53 +210,15 @@ def move_Mouse(targets, center_screen, last_mid_coord, cWidth, cHeight):
 
         mouseMove = [xMid - cWidth, (yMid - headshot_offset) - cHeight]
 
-        # 修改开启自瞄开关
-        if win32api.GetKeyState(0x14):
-            # 定义起始值、结束值和步长
-            # 构建递减序列的列表
-            for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
-                # 分多次移动可一定程度解决超调问题
-                Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
-
-        last_mid_coord = [xMid, yMid]
-
-    else:
-        last_mid_coord = None
-
-
-def drawframe(npImg, targets):
-    """
-    绘制方框
-    Args:
-        npImg:
-        targets:
-
-    Returns:
-
-    """
-    # Used for colors drawn on bounding boxes
-    COLORS = np.random.uniform(0, 255, size=(1500, 3))
-    # See what the bot sees
-    if visuals:
-        npImg = cp.asnumpy(npImg[0])
-        # Loops over every item identified and draws a bounding box
-        for i in range(0, len(targets)):
-            halfW = round(targets["width"][i] / 2)
-            halfH = round(targets["height"][i] / 2)
-            midX = targets['current_mid_x'][i]
-            midY = targets['current_mid_y'][i]
-            (startX, startY, endX, endY) = int(
-                midX + halfW), int(midY + halfH), int(midX - halfW), int(midY - halfH)
-
-            idx = 0
-            # draw the bounding box and label on the frame
-            label = "{}: {:.2f}%".format(
-                "Human", targets["confidence"][i] * 100)
-            cv2.rectangle(npImg, (startX, startY), (endX, endY),
-                          COLORS[idx], 2)
-            y = startY - 15 if startY - 15 > 15 else startY + 15
-            cv2.putText(npImg, label, (startX, y),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+        # 根据鼠标点到目标框中心的的距离
+        if (targets["dist_from_center"][0] < 50):
+            # 修改开启自瞄开关
+            if win32api.GetKeyState(0x14):
+                # 定义起始值、结束值和步长
+                # 构建递减序列的列表
+                for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
+                    # 分多次移动可一定程度解决超调问题
+                    Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
 
 
 if __name__ == "__main__":

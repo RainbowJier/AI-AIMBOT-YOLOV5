@@ -7,7 +7,7 @@ import pygetwindow
 # Could be do with
 # from config import *
 # But we are writing it out for clarity for new devs
-from config import screenShotHeight, screenShotWidth, autoaimRange
+from config import screenShotHeight, screenShotWidth
 
 
 def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
@@ -69,8 +69,8 @@ def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
 
     # 计算自动瞄准的窗口大小
 
-    cWidth: int = autoaimRange // 2
-    cHeight: int = autoaimRange // 2
+    cWidth: int = screenShotHeight // 2
+    cHeight: int = screenShotWidth // 2
 
     print(region)
 
@@ -79,6 +79,6 @@ def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
         print(
             "Your Camera Failed! Ask @Wonder for help in our Discord in the #ai-aimbot channel ONLY: https://discord.gg/rootkitorg")
         return
-    camera.start(target_fps=130, video_mode=True)
+    camera.start(target_fps=150, video_mode=True)
 
     return camera, cWidth, cHeight
