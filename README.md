@@ -13,7 +13,6 @@
 - &#x2705; convert onnx to trt
 - &#x2705; Optimize mouse vibration issue
 - &#x2705; Reduce auto-aiming range.
-- ✘ Automatic gun press
 - ✘ Problem : 完美平台检测程序的函数和鼠标
     - ✘ 检测原理：反作弊用的是木马的手段，要想通过他们的检测，把自己的程序也写成木马
     - ✘ 将程序改为木马，劫持，注入，签名三者其一都可以的
@@ -196,10 +195,10 @@ def move_Mouse(targets, center_screen, cWidth, cHeight):
         ....other
         codes....
 
-        # Based on the distance from the mouse point to the center of the target box
-        if (targets["dist_from_center"][0] < 50):
-            # 修改开启自瞄开关
-            if win32api.GetKeyState(0x14):
+        # The option of the auto-aiming.
+        if win32api.GetKeyState(0x14):
+            # Based on the distance from the mouse point to the center of the target box
+            if (targets["dist_from_center"][0] < 50):
                 # 定义起始值、结束值和步长
                 # 构建递减序列的列表
                 for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:

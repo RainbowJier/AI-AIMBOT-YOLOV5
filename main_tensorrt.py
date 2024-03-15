@@ -210,12 +210,14 @@ def move_Mouse(targets, center_screen, cWidth, cHeight):
 
         mouseMove = [xMid - cWidth, (yMid - headshot_offset) - cHeight]
 
-        # 根据鼠标点到目标框中心的的距离
-        if (targets["dist_from_center"][0] < 50):
-            # 修改开启自瞄开关
-            if win32api.GetKeyState(0x14):
-                # 定义起始值、结束值和步长
-                # 构建递减序列的列表
+        if win32api.GetKeyState(0x14):
+            # 根据鼠标点到目标框中心的的距离
+            if (targets["dist_from_center"][0] < 50):
+                """
+               修改开启自瞄开关
+               定义起始值、结束值和步长
+               构建递减序列的列表
+               """
                 for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
                     # 分多次移动可一定程度解决超调问题
                     Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
