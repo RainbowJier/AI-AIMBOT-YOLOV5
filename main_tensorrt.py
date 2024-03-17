@@ -11,7 +11,7 @@ import win32con
 
 import gameSelection
 from config import useMask, maskHeight, maskWidth, aaQuitKey, confidence, cpsDisplay, \
-    visuals, centerOfScreen, maskSide, lock_smooth, lock_sen, screenShotHeight, screenShotWidth
+    visuals, centerOfScreen, maskSide, lock_smooth, lock_sen, screenShotHeight, screenShotWidth, CT
 from models.common import DetectMultiBackend
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
@@ -71,7 +71,7 @@ def main():
             """
             获取检测到的目标数据
             """
-            targets = detection(npImg, model, names)
+            targets = detection(npImg, model)
 
             """
             移动鼠标
@@ -94,11 +94,16 @@ def main():
                         midX + halfW), int(midY + halfH), int(midX - halfW), int(midY - halfH)
 
                     # draw the bounding box and label on the frame
-                    label = "{}: {:.2f}%".format(
-                        "Human", targets["confidence"][i] * 100)
-                    cv2.rectangle(npImg, (startX, startY), (endX, endY),
-                                  (0, 255, 0), 2)
+                    if targets["class"][0] in (0,2):
+                        label = "{}: {:.2f}%".format(
+                            "Body", targets["confidence"][i] * 100)
 
+                    else:
+                        label = "{}: {:.2f}%".format(
+                            "Head", targets["confidence"][i] * 100)
+
+                    cv2.rectangle(npImg, (startX, startY), (endX, endY),
+                                      (0, 255, 0), 2)
                     y = startY - 15 if startY - 15 > 15 else startY + 15
                     cv2.putText(npImg, label, (startX, y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -135,7 +140,7 @@ def Mask(useMask, maskSide, npImg):
             raise Exception('ERROR: Invalid maskSide! Please use "left" or "right"')
 
 
-def detection(npImg, model, names):
+def detection(npImg, model):
     """
     获取检测到目标的数据（坐标，高度）
     Args:
@@ -160,22 +165,28 @@ def detection(npImg, model, names):
 
     targets = []
     for i, det in enumerate(pred):
-        s = ""
         gn = torch.tensor(im.shape)[[0, 0, 0, 0]]
         if len(det):
-            for c in det[:, -1].unique():
-                n = (det[:, -1] == c).sum()  # detections per class
-                s += f"{n} {names[int(c)]}, "  # add to string
-
             for *xyxy, conf, cls in reversed(det):
-                targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
-                               [float(conf)])  # normalized xywh
+                """
+                TODO:  
+                (侧前面键检测ct)
+                (侧后键检测t)
+                """
+
+                if CT:
+                    if int(cls.item()) == 0:
+                        targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                                       [float(conf), int(cls)])  # normalized xywh
+                else:
+                    if int(cls.item()) == 2:
+                        targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                                        [float(conf), int(cls)])  # normalized xywh
 
     targets = pd.DataFrame(
-        targets, columns=['current_mid_x', 'current_mid_y', 'width', "height", "confidence"])
+        targets, columns=['current_mid_x', 'current_mid_y', 'width', "height", "confidence","class"])
 
     return targets
-
 
 def move_Mouse(targets, center_screen):
     """
@@ -193,9 +204,6 @@ def move_Mouse(targets, center_screen):
             targets["dist_from_center"] = np.sqrt((targets.current_mid_x - center_screen[0]) ** 2 + (
                     targets.current_mid_y - center_screen[1]) ** 2)
 
-            # Sort the data frame by distance from center
-            targets = targets.sort_values("dist_from_center")
-
         """
         鼠标平滑
         ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
@@ -211,10 +219,12 @@ def move_Mouse(targets, center_screen):
 
         dist_x = mouse_x - xMid
 
-        if (targets.shape[0] == 1):  # aim to body
-            headshot_offset = targets.iloc[0].height * 0.3
+        #Body
+        if targets["class"][0] in (0, 2):
+            headshot_offset = targets.iloc[0].height * 0.53
             dist_y = (mouse_y + headshot_offset) - yMid
-        if (targets.shape[0] == 2):  # aim to head
+        # Head
+        else:
             headshot_offset = targets.iloc[0].height * 0.2
             dist_y = (mouse_y - headshot_offset) - yMid
 
@@ -227,13 +237,13 @@ def move_Mouse(targets, center_screen):
         mouseMove = [-ex_x, -ex_y]
 
         if win32api.GetKeyState(0x14):
-            # 根据鼠标点到目标框中心的的距离
-            if (targets["dist_from_center"][0] < 40):
+            if (targets["dist_from_center"][0] < 70):
+                # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
                 # Auto-aiming press
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
                     tmp = mouse_y - targets.iloc[0].height * 0.2
-                    for i in range(0,6):
-                        tmp = tmp - targets.iloc[0].height * 0.002
+                    for i in range(0,4):
+                        tmp = tmp - targets.iloc[0].height * 0.004
                         dist_y = tmp - yMid
                         ex_y = int(k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
                         # The distant from the mouse point to the mid 'x' of box.
@@ -242,6 +252,7 @@ def move_Mouse(targets, center_screen):
                         time.sleep(0.05)
                 else:
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+
 
 if __name__ == "__main__":
     try:

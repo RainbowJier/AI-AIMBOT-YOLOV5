@@ -10,15 +10,18 @@ maskWidth = 80
 maskHeight = 200
 
 
+# ct otherwise t
+CT = False
+
 # fps
-target_fps = 150
+target_fps = 160
 
 # Auto-aimING mouse movement amplifier
 aaMovementAmp = 0.4
 
 # 鼠标平滑
 # lock平滑系数；越大越平滑，最低1.0
-lock_smooth = 8.0
+lock_smooth = 4
 
 # lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
 lock_sen = 0.7
