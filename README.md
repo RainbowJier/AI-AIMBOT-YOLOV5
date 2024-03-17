@@ -199,12 +199,8 @@ def move_Mouse(targets, center_screen, cWidth, cHeight):
         # The option of the auto-aiming.
         if win32api.GetKeyState(0x14):
             # Based on the distance from the mouse point to the center of the target box
-            if (targets["dist_from_center"][0] < 50):
-                # 定义起始值、结束值和步长
-                # 构建递减序列的列表
-                for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
-                    # 分多次移动可一定程度解决超调问题
-                    Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
+            if (targets["dist_from_center"][0] < 50): # ------------------------range
+               Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 ```
 
 ## 📊 Current Stats
