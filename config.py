@@ -9,8 +9,19 @@ maskSide = "left"
 maskWidth = 80
 maskHeight = 200
 
-# Autoaim mouse movement amplifier
-aaMovementAmp = 1
+
+# fps
+target_fps = 150
+
+# Auto-aimING mouse movement amplifier
+aaMovementAmp = 0.4
+
+# 鼠标平滑
+# lock平滑系数；越大越平滑，最低1.0
+lock_smooth = 8.0
+
+# lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
+lock_sen = 0.7
 
 # Person Class Confidence
 confidence = 0.8
@@ -25,7 +36,7 @@ headshot_mode = True
 cpsDisplay = True
 
 # Set to True if you want to get the visuals
-visuals = True
+visuals = False
 
 # Smarter selection of people
 centerOfScreen = True

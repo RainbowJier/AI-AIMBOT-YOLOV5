@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 import torch
 import win32api
+import win32con
 
 import gameSelection
-from config import aaMovementAmp, useMask, maskHeight, maskWidth, aaQuitKey, confidence, headshot_mode, cpsDisplay, \
-    visuals, centerOfScreen, maskSide
+from config import useMask, maskHeight, maskWidth, aaQuitKey, confidence, cpsDisplay, \
+    visuals, centerOfScreen, maskSide, lock_smooth, lock_sen, screenShotHeight, screenShotWidth
 from models.common import DetectMultiBackend
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
@@ -75,7 +76,7 @@ def main():
             """
             移动鼠标
             """
-            move_Mouse(targets, center_screen, cWidth, cHeight)
+            move_Mouse(targets, center_screen)
 
             """
             Draw frame.
@@ -155,7 +156,7 @@ def detection(npImg, model, names):
     results = model(im)
 
     pred = non_max_suppression(
-        results, confidence, confidence, [0, 1, 2, 3], False, max_det=2)
+        results, confidence, confidence, [0, 1, 2, 3], False, max_det=1)
 
     targets = []
     for i, det in enumerate(pred):
@@ -176,7 +177,7 @@ def detection(npImg, model, names):
     return targets
 
 
-def move_Mouse(targets, center_screen, cWidth, cHeight):
+def move_Mouse(targets, center_screen):
     """
     获取目标数据（坐标，高度）
     Returns:
@@ -195,33 +196,52 @@ def move_Mouse(targets, center_screen, cWidth, cHeight):
             # Sort the data frame by distance from center
             targets = targets.sort_values("dist_from_center")
 
-        # Take the first person that shows up in the dataframe (Recall that we sort based on Euclidean distance)
         """
-        添加判断，锁头还是锁身体
+        鼠标平滑
+        ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
         """
+        from math import atan
+
+        # The center of the box
         xMid = targets.iloc[0].current_mid_x
         yMid = targets.iloc[0].current_mid_y
+        # The location of the mouse
+        mouse_x = center_screen[0]
+        mouse_y = center_screen[1]
 
-        box_height = targets.iloc[0].height
-        if headshot_mode:
-            headshot_offset = box_height * 0.4
-        else:
-            headshot_offset = box_height * 0.2
+        dist_x = mouse_x - xMid
 
-        mouseMove = [xMid - cWidth, (yMid - headshot_offset) - cHeight]
+        if (targets.shape[0] == 1):  # aim to body
+            headshot_offset = targets.iloc[0].height * 0.3
+            dist_y = (mouse_y + headshot_offset) - yMid
+        if (targets.shape[0] == 2):  # aim to head
+            headshot_offset = targets.iloc[0].height * 0.2
+            dist_y = (mouse_y - headshot_offset) - yMid
+
+        k = 4.07 * (1 / lock_smooth)
+        ex_x = int(k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
+        ex_y = int(k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
+
+
+        # The distant from the mouse point to the mid 'x' of box.
+        mouseMove = [-ex_x, -ex_y]
 
         if win32api.GetKeyState(0x14):
             # 根据鼠标点到目标框中心的的距离
-            if (targets["dist_from_center"][0] < 50):
-                """
-               修改开启自瞄开关
-               定义起始值、结束值和步长
-               构建递减序列的列表
-               """
-                for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
-                    # 分多次移动可一定程度解决超调问题
-                    Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
-
+            if (targets["dist_from_center"][0] < 40):
+                # Auto-aiming press
+                if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                    tmp = mouse_y - targets.iloc[0].height * 0.2
+                    for i in range(0,6):
+                        tmp = tmp - targets.iloc[0].height * 0.002
+                        dist_y = tmp - yMid
+                        ex_y = int(k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
+                        # The distant from the mouse point to the mid 'x' of box.
+                        mouseMove = [-ex_x, -ex_y]
+                        Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                        time.sleep(0.05)
+                else:
+                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 if __name__ == "__main__":
     try:

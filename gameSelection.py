@@ -7,7 +7,7 @@ import pygetwindow
 # Could be do with
 # from config import *
 # But we are writing it out for clarity for new devs
-from config import screenShotHeight, screenShotWidth
+from config import screenShotHeight, screenShotWidth, target_fps
 
 
 def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
@@ -79,6 +79,6 @@ def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
         print(
             "Your Camera Failed! Ask @Wonder for help in our Discord in the #ai-aimbot channel ONLY: https://discord.gg/rootkitorg")
         return
-    camera.start(target_fps=150, video_mode=True)
+    camera.start(target_fps=target_fps, video_mode=True)
 
     return camera, cWidth, cHeight
