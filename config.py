@@ -10,36 +10,43 @@ maskWidth = 80
 maskHeight = 200
 
 
-# ct otherwise t
 CT = False
+T = False
+
+# CT = True
+# T = False
+
+# CT = False
+# T = True
 
 # fps
-target_fps = 160
+target_fps = 140
 
-# Auto-aimING mouse movement amplifier
-aaMovementAmp = 0.4
+
+
+# Set to True if you want to get the visuals
+visuals = False
 
 # 鼠标平滑
 # lock平滑系数；越大越平滑，最低1.0
-lock_smooth = 4
+lock_smooth = 3.8
 
 # lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
-lock_sen = 0.7
+lock_sen = 0.66
 
 # Person Class Confidence
-confidence = 0.8
+confidence = 0.9
 
 # What key to press to quit and shutdown the autoaim
 aaQuitKey = "P"
 
-# If you want to main slightly upwards towards the head
-headshot_mode = True
+
 
 # Displays the Corrections per second in the terminal
 cpsDisplay = True
 
-# Set to True if you want to get the visuals
-visuals = False
+# Auto-aimING mouse movement amplifier
+aaMovementAmp = 0.4
 
 # Smarter selection of people
 centerOfScreen = True

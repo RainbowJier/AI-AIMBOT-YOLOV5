@@ -11,7 +11,7 @@ import win32con
 
 import gameSelection
 from config import useMask, maskHeight, maskWidth, aaQuitKey, confidence, cpsDisplay, \
-    visuals, centerOfScreen, maskSide, lock_smooth, lock_sen, screenShotHeight, screenShotWidth, CT
+    visuals, centerOfScreen, maskSide, lock_smooth, lock_sen, screenShotHeight, screenShotWidth, CT, T
 from models.common import DetectMultiBackend
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
@@ -28,6 +28,13 @@ except FileNotFoundError:
 
 class Logitech:
     class mouse:
+        """ 鼠标按下 code: 1左 2中 3右 """
+        @staticmethod
+        def press(code):
+            if not ok:
+                return
+            driver.mouse_down(code)
+
         @staticmethod
         def move(x, y):
             if not ok:
@@ -39,7 +46,7 @@ class Logitech:
 
 def main():
     # External Function for running the game selection menu (gameSelection.py)
-    camera, cWidth, cHeight = gameSelection.gameSelection()
+    camera, cWidth, cHeight ,region = gameSelection.gameSelection()
 
     # 自瞄的范围
     center_screen = [cWidth, cHeight]
@@ -76,7 +83,7 @@ def main():
             """
             移动鼠标
             """
-            move_Mouse(targets, center_screen)
+            move_Mouse(targets, center_screen,camera,region)
 
             """
             Draw frame.
@@ -161,25 +168,24 @@ def detection(npImg, model):
     results = model(im)
 
     pred = non_max_suppression(
-        results, confidence, confidence, [0, 1, 2, 3], False, max_det=1)
+        results, confidence, confidence, [0, 1, 2, 3], False, max_det=2)
+
 
     targets = []
     for i, det in enumerate(pred):
         gn = torch.tensor(im.shape)[[0, 0, 0, 0]]
         if len(det):
             for *xyxy, conf, cls in reversed(det):
-                """
-                TODO:  
-                (侧前面键检测ct)
-                (侧后键检测t)
-                """
-
-                if CT:
+                if CT==True and T == False:
                     if int(cls.item()) == 0:
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                        [float(conf), int(cls)])  # normalized xywh
-                else:
+                elif T==True and CT == False:
                     if int(cls.item()) == 2:
+                        targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                                        [float(conf), int(cls)])  # normalized xywh
+                else:
+                    if int(cls.item()) in (0, 2):
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                         [float(conf), int(cls)])  # normalized xywh
 
@@ -188,7 +194,7 @@ def detection(npImg, model):
 
     return targets
 
-def move_Mouse(targets, center_screen):
+def move_Mouse(targets, center_screen,camera,region):
     """
     获取目标数据（坐标，高度）
     Returns:
@@ -204,6 +210,9 @@ def move_Mouse(targets, center_screen):
             targets["dist_from_center"] = np.sqrt((targets.current_mid_x - center_screen[0]) ** 2 + (
                     targets.current_mid_y - center_screen[1]) ** 2)
 
+            # Sort the data frame by distance from center
+            targets = targets.sort_values("dist_from_center")
+
         """
         鼠标平滑
         ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
@@ -211,48 +220,52 @@ def move_Mouse(targets, center_screen):
         from math import atan
 
         # The center of the box
-        xMid = targets.iloc[0].current_mid_x
-        yMid = targets.iloc[0].current_mid_y
+        box_xMid = targets.iloc[0].current_mid_x
+        box_yMid = targets.iloc[0].current_mid_y
+
+
         # The location of the mouse
         mouse_x = center_screen[0]
         mouse_y = center_screen[1]
 
-        dist_x = mouse_x - xMid
+        dist_x = mouse_x - box_xMid
+        headshot_offset = targets.iloc[0].height * 0.38
+        dist_y = mouse_y + headshot_offset - box_yMid
 
-        #Body
-        if targets["class"][0] in (0, 2):
-            headshot_offset = targets.iloc[0].height * 0.53
-            dist_y = (mouse_y + headshot_offset) - yMid
-        # Head
-        else:
-            headshot_offset = targets.iloc[0].height * 0.2
-            dist_y = (mouse_y - headshot_offset) - yMid
+        # Targets
+        target_x = box_xMid
+        # target_y = box_yMid - headshot_offset
+        target_y = box_yMid
 
-        k = 4.07 * (1 / lock_smooth)
-        ex_x = int(k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
-        ex_y = int(k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
+        k = 3.5 * (1 / lock_smooth)
+        ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
+        ex_y = (k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
 
 
         # The distant from the mouse point to the mid 'x' of box.
         mouseMove = [-ex_x, -ex_y]
 
-        if win32api.GetKeyState(0x14):
-            if (targets["dist_from_center"][0] < 70):
-                # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                # Auto-aiming press
-                if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-                    tmp = mouse_y - targets.iloc[0].height * 0.2
-                    for i in range(0,4):
-                        tmp = tmp - targets.iloc[0].height * 0.004
-                        dist_y = tmp - yMid
-                        ex_y = int(k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
-                        # The distant from the mouse point to the mid 'x' of box.
-                        mouseMove = [-ex_x, -ex_y]
-                        Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                        time.sleep(0.05)
-                else:
-                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+        # Capture while pressing left button
+        if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+            frame = camera.get_latest_frame()
+            print(frame.shape)
+            from PIL import Image
+            pil_img = Image.fromarray(frame)
+            import uuid
+            random_uuid = uuid.uuid4()
+            pil_img.save('images/' + str(random_uuid) + '.png')
 
+        if win32api.GetKeyState(0x14):
+            if (targets["dist_from_center"][0] < 100):
+                Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+
+
+                #Auto-aiming press
+                # if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                #     pass
+                #
+                # else:
+                #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 if __name__ == "__main__":
     try:

@@ -72,13 +72,13 @@ def gameSelection() -> (bettercam.BetterCam, int, Union[int, None]):
     cWidth: int = screenShotHeight // 2
     cHeight: int = screenShotWidth // 2
 
-    print(region)
+    # camera = bettercam.create(region=region, output_color="BGRA", max_buffer_len=512)
+    camera = bettercam.create(region=region, max_buffer_len=512)
 
-    camera = bettercam.create(region=region, output_color="BGRA", max_buffer_len=512)
     if camera is None:
         print(
             "Your Camera Failed! Ask @Wonder for help in our Discord in the #ai-aimbot channel ONLY: https://discord.gg/rootkitorg")
         return
     camera.start(target_fps=target_fps, video_mode=True)
 
-    return camera, cWidth, cHeight
+    return camera, cWidth, cHeight,region
