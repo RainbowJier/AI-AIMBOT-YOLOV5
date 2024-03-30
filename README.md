@@ -1,5 +1,22 @@
 ﻿# 🎯 AI Aimbot 🎮
 
+- [🎯 AI Aimbot 🎮](#---ai-aimbot---)
+    * [TODO](#todo)
+    * [There are 3 Versions 🚀🚦🖥️](#there-are-3-versions--------)
+    * [🧰 Requirements](#---requirements)
+    * [🚀 Pre-setup Steps](#---pre-setup-steps)
+    * [To install `PyTorch`, select the appropriate command based on your GPU.](#to-install--pytorch---select-the-appropriate-command-based-on-your-gpu)
+    * [🔌 How to Run (Fast 🏃‍♂️ Version)](#---how-to-run--fast-------version-)
+    * [🔌 How to Run (Faster 🏃‍♂️💨 Version)](#---how-to-run--faster---------version-)
+    * [🔌 How to Run (Fastest 🚀 Version)](#---how-to-run--fastest----version-)
+    * [⚙️ Configurable Settings](#---configurable-settings)
+    * [💫Modifiy the range of self-aiming.](#--modifiy-the-range-of-self-aiming)
+    * [📊 Current Stats](#---current-stats)
+    * [⚠️ Known Cheat-Detectable Games](#---known-cheat-detectable-games)
+    * [🚀 Custom Aimbots and Models](#---custom-aimbots-and-models)
+    * [🥐Problem](#--problem)
+    * [🌠 Future Ideas](#---future-ideas)
+
 ## TODO
 
 - &#x2705; Skip platform detection.
@@ -201,8 +218,8 @@ def move_Mouse(targets, center_screen, cWidth, cHeight):
         # The option of the auto-aiming.
         if win32api.GetKeyState(0x14):
             # Based on the distance from the mouse point to the center of the target box
-            if (targets["dist_from_center"][0] < 50): # ------------------------range
-               Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+            if (targets["dist_from_center"][0] < 50):  # ------------------------range
+                Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 ```
 
 ## 📊 Current Stats

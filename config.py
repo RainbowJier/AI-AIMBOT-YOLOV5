@@ -3,44 +3,38 @@
 screenShotHeight = 320
 screenShotWidth = 320
 
-# Use "left" or "right" for the mask side depending on where the interfering object is, useful for 3rd player models or large guns
-useMask = False
-maskSide = "left"
-maskWidth = 80
-maskHeight = 200
-
+# ONNX ONLY - Choose 1 of the 3 below
+# 1 - CPU
+# 2 - AMD
+# 3 - NVIDIA
+onnxChoice = 3
 
 CT = False
 T = False
 
 # CT = True
 # T = False
-
+#
 # CT = False
 # T = True
 
 # fps
 target_fps = 140
 
-
-
 # Set to True if you want to get the visuals
 visuals = False
 
 # 鼠标平滑
 # lock平滑系数；越大越平滑，最低1.0
-lock_smooth = 3.8
-
+lock_smooth = 3
 # lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
 lock_sen = 0.66
 
 # Person Class Confidence
-confidence = 0.9
+confidence = 0.78
 
 # What key to press to quit and shutdown the autoaim
 aaQuitKey = "P"
-
-
 
 # Displays the Corrections per second in the terminal
 cpsDisplay = True
@@ -50,9 +44,3 @@ aaMovementAmp = 0.4
 
 # Smarter selection of people
 centerOfScreen = True
-
-# ONNX ONLY - Choose 1 of the 3 below
-# 1 - CPU
-# 2 - AMD
-# 3 - NVIDIA
-onnxChoice = 3
