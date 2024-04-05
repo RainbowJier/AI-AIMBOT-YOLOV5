@@ -154,13 +154,14 @@ def detection(npImg, model):
     results = model(im)
 
     pred = non_max_suppression(
-        results, confidence, confidence, [0, 1, 2, 3], False, max_det=2)
+        results, confidence, confidence, [0, 1, 2, 3], False, max_det=3)
 
     targets = []
     for i, det in enumerate(pred):
         gn = torch.tensor(im.shape)[[0, 0, 0, 0]]
         if len(det):
             for *xyxy, conf, cls in reversed(det):
+
                 if CT == True and T == False:
                     if int(cls.item()) == 0:
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
@@ -170,13 +171,11 @@ def detection(npImg, model):
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                        [float(conf), int(cls)])  # normalized xywh
                 else:
-                    if int(cls.item()) in (0, 2):
-                        targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
-                                       [float(conf), int(cls)])  # normalized xywh
+                    targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                                   [float(conf), int(cls)])  # normalized xywh
 
     targets = pd.DataFrame(
         targets, columns=['current_mid_x', 'current_mid_y', 'width', "height", "confidence", "class"])
-
     return targets
 
 
@@ -207,7 +206,7 @@ def move_Mouse(targets, center_screen, camera, region):
         mouse_x = center_screen[0]
         mouse_y = center_screen[1]
 
-        headshot_offset = targets.iloc[0].height * 0.39
+        headshot_offset = targets.iloc[0].height * 0.37
         # Targets
         target_y = mouse_y + headshot_offset
 
@@ -231,8 +230,8 @@ def move_Mouse(targets, center_screen, camera, region):
         #     pil_img.save('images/' + str(random_uuid) + '.png')
 
         if win32api.GetKeyState(0x14):
-            if (targets["dist_from_center"][0] < 60):
-                # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+            if (targets["dist_from_center"][0] < 100):
+                # Logitech.mouse.move(int(mouseMov0]), int(mouseMove[1]))
                 # Auto-aiming press
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
                     tmp_y = mouse_y - box_yMid
@@ -246,13 +245,14 @@ def move_Mouse(targets, center_screen, camera, region):
                     mouseMove2 = [-ex_x, -ex_y]
 
                     Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
-                    time.sleep(0.03)
+                    time.sleep(0.02)
+
                 else:
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 
 def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
-    k = 3.8 * (1 / lock_smooth)
+    k = 3.7 * (1 / lock_smooth)
     ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
     ex_y = (k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
     # The distant from the mouse point to the mid 'x' of box.
