@@ -33,9 +33,9 @@
 - &#x2705; Auto-aiming press.
 - &#x2705; Set identification ct or t
 - &#x2705; Capture screen while pressing the left button.
-- ✘ Problem : 完美平台检测程序的函数和鼠标
-    - ✘ 检测原理：反作弊用的是木马的手段，要想通过他们的检测，把自己的程序也写成木马
-    - ✘ 将程序改为木马，劫持，注入，签名三者其一都可以的
+- 完美平台检测程序的函数和鼠标
+    - 检测原理：检测鼠标的移动轨迹
+    - 解决：贝塞尔曲线拟合，或者变种
 
 *** 
 

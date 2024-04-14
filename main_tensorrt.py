@@ -206,7 +206,7 @@ def move_Mouse(targets, center_screen, camera, region):
         mouse_x = center_screen[0]
         mouse_y = center_screen[1]
 
-        headshot_offset = targets.iloc[0].height * 0.37
+        headshot_offset = targets.iloc[0].height * 0.35
         # Targets
         target_y = mouse_y + headshot_offset
 
@@ -234,6 +234,7 @@ def move_Mouse(targets, center_screen, camera, region):
                 # Logitech.mouse.move(int(mouseMov0]), int(mouseMove[1]))
                 # Auto-aiming press
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                    time.sleep(0.04)
                     tmp_y = mouse_y - box_yMid
                     tmp_x = mouse_x - box_xMid
 
@@ -245,14 +246,14 @@ def move_Mouse(targets, center_screen, camera, region):
                     mouseMove2 = [-ex_x, -ex_y]
 
                     Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
-                    time.sleep(0.02)
+
 
                 else:
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 
 def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
-    k = 3.7 * (1 / lock_smooth)
+    k = 3 * (1 / lock_smooth)
     ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
     ex_y = (k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
     # The distant from the mouse point to the mid 'x' of box.
