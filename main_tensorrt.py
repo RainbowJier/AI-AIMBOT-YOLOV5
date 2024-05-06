@@ -12,7 +12,7 @@ import win32con
 
 import gameSelection
 from config import aaQuitKey, confidence, cpsDisplay, \
-    visuals, centerOfScreen, lock_smooth, lock_sen, screenShotHeight, screenShotWidth, CT, T
+    visuals, centerOfScreen, lock_smooth, lock_sen, screenShotHeight, screenShotWidth, CT, T, aim_range
 from models.common import DetectMultiBackend
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
@@ -171,8 +171,9 @@ def detection(npImg, model):
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                        [float(conf), int(cls)])  # normalized xywh
                 else:
-                    targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
-                                   [float(conf), int(cls)])  # normalized xywh
+                    if int(cls.item()) == 2 or int(cls.item()) == 0:
+                        targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
+                                       [float(conf), int(cls)])  # normalized xywh
 
     targets = pd.DataFrame(
         targets, columns=['current_mid_x', 'current_mid_y', 'width', "height", "confidence", "class"])
@@ -206,8 +207,9 @@ def move_Mouse(targets, center_screen, camera, region):
         mouse_x = center_screen[0]
         mouse_y = center_screen[1]
 
-        headshot_offset = targets.iloc[0].height * 0.35
+        headshot_offset = targets.iloc[0].height * 0.38
         # Targets
+        target_x = box_xMid
         target_y = mouse_y + headshot_offset
 
         # Distance
@@ -219,21 +221,16 @@ def move_Mouse(targets, center_screen, camera, region):
         """
         mouseMove = pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth)
 
-        # Capture while pressing left button
-        # if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-        #     frame = camera.get_latest_frame()
-        #     print(frame.shape)
-        #     from PIL import Image
-        #     pil_img = Image.fromarray(frame)
-        #     import uuid
-        #     random_uuid = uuid.uuid4()
-        #     pil_img.save('images/' + str(random_uuid) + '.png')
+        # Capture the screen.
+        # capture_screen(camera)
 
         if win32api.GetKeyState(0x14):
-            if (targets["dist_from_center"][0] < 100):
-                # Logitech.mouse.move(int(mouseMov0]), int(mouseMove[1]))
+            if (targets["dist_from_center"][0] < aim_range):
+
+                # Logitech.mouse.move(int(box_xMid - mouse_x), int(box_yMid - mouse_y))
                 # Auto-aiming press
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                    # pass
                     time.sleep(0.04)
                     tmp_y = mouse_y - box_yMid
                     tmp_x = mouse_x - box_xMid
@@ -247,13 +244,54 @@ def move_Mouse(targets, center_screen, camera, region):
 
                     Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
 
-
                 else:
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                    # relative_pos_list = SmoothMovement(mouse_x, mouse_y, target_x, target_y)
+                    #
+                    # for pos in relative_pos_list:  # 然后轨迹一段
+                    #     Logitech.mouse.move(pos[0], pos[1])
+                    # Logitech.mouse.move(int(target_x - mouse_x), int(target_y - mouse_y))  # 最后进准到目标点
+
+
+def SmoothMovement(mouse_x, mouse_y, target_x, target_y):
+    import random
+    step = 10
+    start_pos = (mouse_x, mouse_y)  # 起始坐标
+    target_pos = (target_x, target_y)  # 终点坐标
+
+    relative_pos_list = []
+
+    print("起始坐标：", start_pos)
+    for i in range(0, step):
+        if i <= step / 2:
+            dx = int(random.random() * (target_pos[0] - start_pos[0]) / step)
+            dy = int(random.random() * (target_pos[1] - start_pos[1]) / step)
+        else:
+            dx = int(random.random() * (target_pos[0] - start_pos[0]) / step * 2)
+            dy = int(random.random() * (target_pos[1] - start_pos[1]) / step * 2)
+        # time.sleep(random.random() * 0.001)
+        print(dx, dy)
+        relative_pos_list.append((dx, dy))
+
+    return relative_pos_list
+
+
+def capture_screen(camera):
+    # while pressing left button
+    if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+        frame = camera.get_latest_frame()
+        print(frame.shape)
+        from PIL import Image
+        pil_img = Image.fromarray(frame)
+        import uuid
+        random_uuid = uuid.uuid4()
+        pil_img.save('images/' + str(random_uuid) + '.png')
 
 
 def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
-    k = 3 * (1 / lock_smooth)
+    # t越小越慢
+    t = 3
+    k = t * (1 / lock_smooth)
     ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
     ex_y = (k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
     # The distant from the mouse point to the mid 'x' of box.

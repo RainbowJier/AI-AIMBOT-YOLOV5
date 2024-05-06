@@ -11,12 +11,14 @@ onnxChoice = 3
 #
 CT = False
 T = False
-#
+
 # CT = True
 # T = False
 
 # CT = False
 # T = True
+
+aim_range = 60
 
 # fps
 target_fps = 140
@@ -26,12 +28,12 @@ auto_press = True
 visuals = False
 
 # 鼠标平滑，最低1.0
-lock_smooth = 3.5
+lock_smooth = 3.6
 # lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
 lock_sen = 0.66
 
 # Person Class Confidence
-confidence = 0.76
+confidence = 0.85
 
 # What key to press to quit and shutdown the autoaim
 aaQuitKey = "P"
