@@ -29,13 +29,22 @@ except FileNotFoundError:
 
 class Logitech:
     class mouse:
-        """ 鼠标按下 code: 1左 2中 3右 """
 
         @staticmethod
-        def press(code):
+        def mouse_press(code):
+            """ 鼠标按下 code: 1左 2中 3右 """
             if not ok:
                 return
             driver.mouse_down(code)
+            print("按下左键")
+
+        @staticmethod
+        def mouse_up(code):
+            """ 鼠标松开 code: 左 中 右 """
+            if not ok:
+                return
+            driver.mouse_up(code)
+            print("松开左键")
 
         @staticmethod
         def move(x, y):
@@ -58,15 +67,12 @@ def main():
     sTime = time.time()
 
     # Loading Yolo5 Small AI Model
-    model = DetectMultiBackend('weights/10w/10w-v5.engine', device=torch.device(
+    model = DetectMultiBackend('weights/cs2/10w-v5-32-fp16.engine', device=torch.device(
         'cuda'), dnn=False, data='', fp16=True)
     stride, names, pt = model.stride, model.names, model.pt
-
-    # Main loop Quit if exit key is pressed
-    last_mid_coord = None
+    FIRST_AIM = 0
     with torch.no_grad():
         while win32api.GetAsyncKeyState(ord(aaQuitKey)) == 0:
-
             npImg = cp.array([camera.get_latest_frame()])
             if npImg.shape[3] == 4:
                 # If the image has an alpha channel, remove it
@@ -80,7 +86,7 @@ def main():
             """
             移动鼠标
             """
-            move_Mouse(targets, center_screen, camera, region)
+            move_Mouse(targets, center_screen, camera)
 
             """
             Draw frame.
@@ -106,8 +112,7 @@ def main():
                         label = "{}: {:.2f}%".format(
                             "Head", targets["confidence"][i] * 100)
 
-                    cv2.rectangle(npImg, (startX, startY), (endX, endY),
-                                  (0, 255, 0), 2)
+                    cv2.rectangle(npImg, (startX, startY), (endX, endY), (0, 255, 0), 2)
                     y = startY - 15 if startY - 15 > 15 else startY + 15
                     cv2.putText(npImg, label, (startX, y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -171,7 +176,7 @@ def detection(npImg, model):
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                        [float(conf), int(cls)])  # normalized xywh
                 else:
-                    if int(cls.item()) == 2 or int(cls.item()) == 0:
+                    if int(cls.item()) == 0 or int(cls.item()) == 2:
                         targets.append((xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist() +
                                        [float(conf), int(cls)])  # normalized xywh
 
@@ -180,7 +185,7 @@ def detection(npImg, model):
     return targets
 
 
-def move_Mouse(targets, center_screen, camera, region):
+def move_Mouse(targets, center_screen, camera):
     """
     获取目标数据（坐标，高度）
     Returns:
@@ -199,7 +204,7 @@ def move_Mouse(targets, center_screen, camera, region):
             # Sort the data frame by distance from center
             targets = targets.sort_values("dist_from_center")
 
-        # The center of the box
+        # The center of the body
         box_xMid = targets.iloc[0].current_mid_x
         box_yMid = targets.iloc[0].current_mid_y
 
@@ -207,14 +212,15 @@ def move_Mouse(targets, center_screen, camera, region):
         mouse_x = center_screen[0]
         mouse_y = center_screen[1]
 
-        headshot_offset = targets.iloc[0].height * 0.38
+        headshot_offset = targets.iloc[0].height * 0.32
+        # headshot_offset = targets.iloc[0].height * 0.1
+        # headshot_offset = targets.iloc[0].height
         # Targets
         target_x = box_xMid
-        target_y = mouse_y + headshot_offset
-
+        target_y = box_yMid - headshot_offset
         # Distance
-        dist_x = mouse_x - box_xMid
-        dist_y = target_y - box_yMid
+        dist_x = mouse_x - target_x
+        dist_y = mouse_y - target_y
         """
         鼠标平滑
         ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
@@ -225,67 +231,35 @@ def move_Mouse(targets, center_screen, camera, region):
         # capture_screen(camera)
 
         if win32api.GetKeyState(0x14):
-            if (targets["dist_from_center"][0] < aim_range):
-
-                # Logitech.mouse.move(int(box_xMid - mouse_x), int(box_yMid - mouse_y))
-                # Auto-aiming press
-                if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-                    # pass
-                    time.sleep(0.04)
-                    tmp_y = mouse_y - box_yMid
-                    tmp_x = mouse_x - box_xMid
-
-                    lock_smooth2 = 5
-                    k = 4 * (1 / lock_smooth2)
-                    ex_x = (k / lock_sen * atan(tmp_x / screenShotWidth) * screenShotWidth)
-                    ex_y = (k / lock_sen * atan(tmp_y / screenShotHeight) * screenShotWidth)
-                    # The distant from the mouse point to the mid 'x' of box.
-                    mouseMove2 = [-ex_x, -ex_y]
-
-                    Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
-
-                else:
-                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                    # relative_pos_list = SmoothMovement(mouse_x, mouse_y, target_x, target_y)
-                    #
-                    # for pos in relative_pos_list:  # 然后轨迹一段
-                    #     Logitech.mouse.move(pos[0], pos[1])
-                    # Logitech.mouse.move(int(target_x - mouse_x), int(target_y - mouse_y))  # 最后进准到目标点
-
-
-def SmoothMovement(mouse_x, mouse_y, target_x, target_y):
-    import random
-    step = 10
-    start_pos = (mouse_x, mouse_y)  # 起始坐标
-    target_pos = (target_x, target_y)  # 终点坐标
-
-    relative_pos_list = []
-
-    print("起始坐标：", start_pos)
-    for i in range(0, step):
-        if i <= step / 2:
-            dx = int(random.random() * (target_pos[0] - start_pos[0]) / step)
-            dy = int(random.random() * (target_pos[1] - start_pos[1]) / step)
-        else:
-            dx = int(random.random() * (target_pos[0] - start_pos[0]) / step * 2)
-            dy = int(random.random() * (target_pos[1] - start_pos[1]) / step * 2)
-        # time.sleep(random.random() * 0.001)
-        print(dx, dy)
-        relative_pos_list.append((dx, dy))
-
-    return relative_pos_list
+            # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+            if (targets["dist_from_center"][0] <= aim_range):
+                Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                # if (win32api.GetKeyState(win32con.VK_LBUTTON) >= 0):
+                #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                # if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                #     time.sleep(0.1)
+                #     tmp_x = mouse_x - (box_xMid)
+                #     tmp_y = mouse_y - (box_yMid + box_yMid * 0.2)
+                #     lock_smooth2 = 2.7
+                #     k = 4 * (1 / lock_smooth2)
+                #     ex_x = (k / lock_sen * atan(tmp_x / screenShotWidth) * screenShotWidth)
+                #     ex_y = (k / lock_sen * atan(tmp_y / screenShotHeight) * screenShotWidth)
+                #     # The distant from the mouse point to the mid 'x' of box.
+                #     mouseMove2 = [-ex_x, -ex_y]
+                #     Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
+                # else:
+                #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 
 def capture_screen(camera):
     # while pressing left button
     if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
         frame = camera.get_latest_frame()
-        print(frame.shape)
         from PIL import Image
         pil_img = Image.fromarray(frame)
-        import uuid
-        random_uuid = uuid.uuid4()
-        pil_img.save('images/' + str(random_uuid) + '.png')
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        pil_img.save('images/' + str(timestamp) + '.png')
 
 
 def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
@@ -308,4 +282,3 @@ if __name__ == "__main__":
 
         traceback.print_exception(e)
         print("ERROR: " + str(e))
-        print("Ask @Wonder for help in our Discord in the #ai-aimbot channel ONLY: https://discord.gg/rootkitorg")

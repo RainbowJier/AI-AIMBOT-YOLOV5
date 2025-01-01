@@ -11,38 +11,37 @@ onnxChoice = 3
 #
 CT = False
 T = False
-
+#
 # CT = True
 # T = False
-
+#
 # CT = False
 # T = True
 
-aim_range = 60
+# aim range
+aim_range = 200
+# capture the screen while clicking left button
+# 鼠标平滑，最低1.0
+lock_smooth = 2.9
+capture = False
 
 # fps
-target_fps = 140
+target_fps = 90
 
-auto_press = True
 # Set to True if you want to get the visuals
 visuals = False
 
-# 鼠标平滑，最低1.0
-lock_smooth = 3.6
 # lock幅度系数；若在桌面试用请调成1，在游戏中(csgo)则为灵敏度
 lock_sen = 0.66
 
 # Person Class Confidence
-confidence = 0.85
+confidence = 0.8
 
 # What key to press to quit and shutdown the autoaim
 aaQuitKey = "P"
 
 # Displays the Corrections per second in the terminal
 cpsDisplay = True
-
-# Auto-aimING mouse movement amplifier
-aaMovementAmp = 0.4
 
 # Smarter selection of people
 centerOfScreen = True

@@ -8,14 +8,15 @@ import onnxruntime as ort
 import pandas as pd
 import torch
 import win32api
+import win32con
 from pynput import mouse
 
 import gameSelection
 # Could be do with
 # from config import *
 # But we are writing it out for clarity for new devs
-from config import useMask, maskHeight, maskWidth, aaQuitKey, confidence, headshot_mode, cpsDisplay, \
-    visuals, onnxChoice, centerOfScreen, aaMovementAmp
+from config import aaQuitKey, confidence, cpsDisplay, \
+    visuals, onnxChoice, centerOfScreen, aim_range
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
 temp = pathlib.PosixPath
@@ -45,7 +46,7 @@ class Logitech:
 
 def main():
     # 用于运行游戏选择菜单的外部功能（gameSelection.py）
-    camera, cWidth, cHeight = gameSelection.gameSelection()
+    camera, cWidth, cHeight, region = gameSelection.gameSelection()
 
     #  用于强制垃圾回收
     count = 0
@@ -64,7 +65,7 @@ def main():
     so = ort.SessionOptions()
     so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 
-    ort_sess = ort.InferenceSession('weights/10w/10w-v5-320-16.onnx',
+    ort_sess = ort.InferenceSession('weights/sanjiaozhou/v1/320-FP16/sjz.onnx',
                                     sess_options=so, providers=[onnxProvider])
 
     # 获取模型的输入信息
@@ -82,16 +83,6 @@ def main():
     while win32api.GetAsyncKeyState(ord(aaQuitKey)) == 0:
         # 获取框架
         npImg = np.array(camera.get_latest_frame())  # 获取截图
-
-        from config import maskSide  # "temporary" workaround for bad syntax
-        if useMask:
-            maskSide = maskSide.lower()
-            if maskSide == "right":
-                npImg[-maskHeight:, -maskWidth:, :] = 0
-            elif maskSide == "left":
-                npImg[-maskHeight:, :maskWidth, :] = 0
-            else:
-                raise Exception('ERROR: Invalid maskSide! Please use "left" or "right"')
 
         # If Nvidia, do this
         if onnxChoice == 3:
@@ -187,27 +178,19 @@ def main():
 
             box_height = targets.iloc[0].height
             # 瞄准头部
-            if headshot_mode:
-                headshot_offset = box_height * 0.1
-            # 身体
-            else:
-                headshot_offset = box_height * 0.25
+            headshot_offset = box_height * 0.1
 
             # 最终移动的坐标
             mouseMove = [xMid - cWidth, (yMid - headshot_offset) - cHeight]
 
-            # Moving the mouse
-            # if win32api.GetKeyState(0x14):
-            # win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, int(
-            #         mouseMove[0] * aaMovementAmp), int(mouseMove[1] * aaMovementAmp), 0, 0)
-            # last_mid_coord = [xMid, yMid]
             # 修改开启自瞄开关,0x43:c按钮
             if win32api.GetKeyState(0x14):
-                # 定义起始值、结束值和步长
-                # 构建递减序列的列表
-                for number in [aaMovementAmp - 0.05 * i for i in range(int((0.5 - 0.1) / 0.05) + 1)]:
-                    # 分多次移动可一定程度解决超调问题
-                    Logitech.mouse.move(int(mouseMove[0] * number), int(mouseMove[1] * number))
+                if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+                    capture_screen(camera)
+                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                else:
+                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+
             # 当点击右键
 
             last_mid_coord = [xMid, yMid]
@@ -224,8 +207,10 @@ def main():
                 halfH = round(targets["height"][i] / 2)
                 midX = targets['current_mid_x'][i]
                 midY = targets['current_mid_y'][i]
-                (startX, startY, endX, endY) = int(midX + halfW), int(midY +
-                                                                      halfH), int(midX - halfW), int(midY - halfH)
+                (startX, startY, endX, endY) = (int(midX + halfW),
+                                                int(midY + halfH),
+                                                int(midX - halfW),
+                                                int(midY - halfH))
 
                 idx = 0
                 # draw the bounding box and label on the frame
@@ -254,6 +239,17 @@ def main():
             if (cv2.waitKey(1) & 0xFF) == ord('q'):
                 exit()
     camera.stop()
+
+
+def capture_screen(camera):
+    # while pressing left button
+    if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+        frame = camera.get_latest_frame()
+        from PIL import Image
+        pil_img = Image.fromarray(frame)
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        pil_img.save('C:\\Users\\30218\Desktop\SJZ\\train/' + str(timestamp) + '.png')
 
 
 if __name__ == "__main__":
