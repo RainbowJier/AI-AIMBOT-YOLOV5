@@ -186,13 +186,12 @@ def main():
             # 修改开启自瞄开关,0x43:c按钮
             if win32api.GetKeyState(0x14):
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-                    capture_screen(camera)
+                    # capture_screen(camera)
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
                 else:
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
             # 当点击右键
-
             last_mid_coord = [xMid, yMid]
 
 

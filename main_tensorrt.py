@@ -67,7 +67,7 @@ def main():
     sTime = time.time()
 
     # Loading Yolo5 Small AI Model
-    model = DetectMultiBackend('weights/cs2/10w-v5-32-fp16.engine', device=torch.device(
+    model = DetectMultiBackend('weights/cs2/xiaozhen.engine', device=torch.device(
         'cuda'), dnn=False, data='', fp16=True)
     stride, names, pt = model.stride, model.names, model.pt
     FIRST_AIM = 0
@@ -159,7 +159,7 @@ def detection(npImg, model):
     results = model(im)
 
     pred = non_max_suppression(
-        results, confidence, confidence, [0, 1, 2, 3], False, max_det=3)
+        results, confidence, confidence, [0, 1, 2, 3], False, max_det=2)
 
     targets = []
     for i, det in enumerate(pred):
@@ -215,17 +215,20 @@ def move_Mouse(targets, center_screen, camera):
         headshot_offset = targets.iloc[0].height * 0.32
         # headshot_offset = targets.iloc[0].height * 0.1
         # headshot_offset = targets.iloc[0].height
+
         # Targets
         target_x = box_xMid
         target_y = box_yMid - headshot_offset
+
         # Distance
         dist_x = mouse_x - target_x
         dist_y = mouse_y - target_y
+
         """
         鼠标平滑
         ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
         """
-        mouseMove = pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth)
+        mouseMove = moveSmooth(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth, 3)
 
         # Capture the screen.
         # capture_screen(camera)
@@ -233,23 +236,12 @@ def move_Mouse(targets, center_screen, camera):
         if win32api.GetKeyState(0x14):
             # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
             if (targets["dist_from_center"][0] <= aim_range):
-                Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                # if (win32api.GetKeyState(win32con.VK_LBUTTON) >= 0):
-                #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                # if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-                #     time.sleep(0.1)
-                #     tmp_x = mouse_x - (box_xMid)
-                #     tmp_y = mouse_y - (box_yMid + box_yMid * 0.2)
-                #     lock_smooth2 = 2.7
-                #     k = 4 * (1 / lock_smooth2)
-                #     ex_x = (k / lock_sen * atan(tmp_x / screenShotWidth) * screenShotWidth)
-                #     ex_y = (k / lock_sen * atan(tmp_y / screenShotHeight) * screenShotWidth)
-                #     # The distant from the mouse point to the mid 'x' of box.
-                #     mouseMove2 = [-ex_x, -ex_y]
-                #     Logitech.mouse.move(int(mouseMove2[0]), int(mouseMove2[1]))
+                # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                if (win32api.GetKeyState(win32con.VK_LBUTTON) >= 0):
+                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
                 # else:
+                #     mouseMove = moveSmooth(dist_x, mouse_y-box_yMid, lock_smooth, lock_sen, screenShotWidth, 3)
                 #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-
 
 def capture_screen(camera):
     # while pressing left button
@@ -262,15 +254,13 @@ def capture_screen(camera):
         pil_img.save('images/' + str(timestamp) + '.png')
 
 
-def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
-    # t越小越慢
-    t = 3
-    k = t * (1 / lock_smooth)
+def moveSmooth(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth, speed):
+    # speed越小越慢
+    k = speed * (1 / lock_smooth)
     ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
     ex_y = (k / lock_sen * atan(dist_y / screenShotHeight) * screenShotWidth)
     # The distant from the mouse point to the mid 'x' of box.
     mouseMove = [-ex_x, -ex_y]
-
     return mouseMove
 
 

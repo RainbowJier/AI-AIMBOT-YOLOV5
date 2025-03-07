@@ -12,7 +12,7 @@ import win32con
 
 import gameSelection
 from config_sjz import aaQuitKey, confidence, cpsDisplay, \
-    visuals, centerOfScreen, aim_range
+    visuals, centerOfScreen, aim_range, screenShotWidth, lock_smooth
 from models.common import DetectMultiBackend
 from utils.general import (cv2, non_max_suppression, xyxy2xywh)
 
@@ -189,24 +189,38 @@ def move_Mouse(targets, center_screen, camera):
         box_yMid = targets.iloc[0].current_mid_y
 
         box_height = targets.iloc[0].height
-        # 瞄准头部
-        headshot_offset = box_height
 
-        # 最终移动的坐标
-        mouseMove = [box_xMid - center_screen[0], box_yMid - center_screen[1]]
+        mouse_x = center_screen[0]
+        mouse_y = center_screen[1]
 
-        headshot_offset = targets.iloc[0].height
-
-        # Targets
         target_x = box_xMid
-        target_y = box_yMid - headshot_offset
+        target_y = box_yMid
+
+        # Distance
+        dist_x = mouse_x - target_x
+        dist_y = mouse_y - target_y
+
+        # mouseMove = [box_xMid - center_screen[0], box_yMid - center_screen[1]]
+        mouseMove = pinghua(dist_x, dist_y, lock_smooth, 0.66, screenShotWidth)
+
         if win32api.GetKeyState(0x14):
-            # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-            if (targets["dist_from_center"][0] <= aim_range):
-                if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
-                    capture_screen(camera)
-                else:
-                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+            Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+            # if (targets["dist_from_center"][0] <= aim_range):
+            #     if (win32api.GetKeyState(win32con.VK_LBUTTON) < 0):
+            #         # capture_screen(camera)
+            #     else:
+            #         Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+
+def pinghua(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth):
+    # t越小越慢
+    t = 3
+    k = t * (1 / lock_smooth)
+    ex_x = (k / lock_sen * atan(dist_x / screenShotWidth) * screenShotWidth)
+    ex_y = (k / lock_sen * atan(dist_y / screenShotWidth) * screenShotWidth)
+    # The distant from the mouse point to the mid 'x' of box.
+    mouseMove = [-ex_x, -ex_y]
+
+    return mouseMove
 
 def capture_screen(camera):
     # while pressing left button
