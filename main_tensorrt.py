@@ -228,7 +228,7 @@ def move_Mouse(targets, center_screen, camera):
         鼠标平滑
         ex_value = lock_smooth / lock_sen * atan((mouse_x - target_x)/320)/320
         """
-        mouseMove = moveSmooth(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth, 3)
+        mouseMove = moveSmooth(dist_x, dist_y, lock_smooth, lock_sen, screenShotWidth, 2.6)
 
         # Capture the screen.
         # capture_screen(camera)
@@ -239,9 +239,9 @@ def move_Mouse(targets, center_screen, camera):
                 # Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
                 if (win32api.GetKeyState(win32con.VK_LBUTTON) >= 0):
                     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
-                # else:
-                #     mouseMove = moveSmooth(dist_x, mouse_y-box_yMid, lock_smooth, lock_sen, screenShotWidth, 3)
-                #     Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
+                else:
+                    mouseMove = moveSmooth(dist_x, mouse_y-box_yMid, lock_smooth, lock_sen, screenShotWidth, 3)
+                    Logitech.mouse.move(int(mouseMove[0]), int(mouseMove[1]))
 
 def capture_screen(camera):
     # while pressing left button

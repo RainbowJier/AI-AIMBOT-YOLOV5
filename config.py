@@ -11,15 +11,15 @@ onnxChoice = 3
 #
 # CT = False
 # T = False
+# # #
+CT = True
+T = False
 # #
-# CT = True
-# T = False
-# #
-CT = False
-T = True
+# CT = False
+# T = True
 
 # aim range
-aim_range = 55
+aim_range = 50
 # capture the screen while clicking left button
 # 鼠标平滑，最低1.0
 lock_smooth = 4
